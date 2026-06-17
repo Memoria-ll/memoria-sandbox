@@ -13,17 +13,58 @@ const echoEl = document.getElementById('node-echo');
 const resetBtn = document.getElementById('reset-btn');
 const deployBtn = document.getElementById('deploy-btn');
 
-const nodes = [
+const regions = [
+  { title: '響森圏', position: [-5.4, -0.08, 3.0], radius: 2.35, color: 0x315f58 },
+  { title: '石窟帯', position: [-1.8, -0.1, 1.0], radius: 2.05, color: 0x4b4476 },
+  { title: '空洞律域', position: [2.25, -0.1, 1.65], radius: 2.25, color: 0x6a3449 },
+  { title: '沈黙海', position: [4.9, -0.12, -2.3], radius: 2.75, color: 0x29314d },
+  { title: '無響核周辺', position: [-1.15, -0.14, -3.35], radius: 2.35, color: 0x3d425d }
+];
+
+const stages = [
   {
-    id: 'forest',
+    id: 'forest-gate',
+    title: '森の入口',
+    desc: 'もっとも浅い還響域。残響の流れがまだ穏やかに揺れている。',
+    state: '攻略済み',
+    depth: '深度1 / 階層10',
+    echo: '+4',
+    position: [-6.4, 0.18, 3.65],
+    color: 0x69d7bd,
+    scale: .82
+  },
+  {
+    id: 'forest-core',
     title: '森の共鳴',
     desc: '深度1の終端。微かな残響がまだ地表に残っている。',
     state: '攻略済み',
     depth: '深度1 / 階層30',
     echo: '+12',
-    position: [-5.2, 0.2, 2.2],
+    position: [-4.75, 0.2, 2.6],
     color: 0x69d7bd,
     scale: 1.0
+  },
+  {
+    id: 'moss-choir',
+    title: '苔むす合唱路',
+    desc: '湿った壁面に声が滲む。余響を集めやすい小径。',
+    state: '攻略中',
+    depth: '深度2 / 階層8',
+    echo: '+0',
+    position: [-5.95, 0.16, 1.45],
+    color: 0x84d9b9,
+    scale: .9
+  },
+  {
+    id: 'stone-throat',
+    title: '石喉の入口',
+    desc: '硬い反響が短く返る。装備更新の起点になる。',
+    state: '攻略済み',
+    depth: '深度2 / 階層12',
+    echo: '+7',
+    position: [-2.65, 0.16, 1.7],
+    color: 0x9b8cff,
+    scale: .9
   },
   {
     id: 'cave',
@@ -32,9 +73,20 @@ const nodes = [
     state: '攻略中',
     depth: '深度2 / 階層18',
     echo: '+0',
-    position: [-2.4, -0.35, .85],
+    position: [-1.2, 0.22, .45],
     color: 0x9080d8,
-    scale: 1.12
+    scale: 1.08
+  },
+  {
+    id: 'broken-bridge',
+    title: '断響橋',
+    desc: '響きの橋が途中で途切れている。次の領域への分岐点。',
+    state: '未攻略',
+    depth: '深度2 / 階層25',
+    echo: '+0',
+    position: [.15, 0.18, 2.35],
+    color: 0xb1a2ff,
+    scale: .85
   },
   {
     id: 'hollow',
@@ -43,9 +95,31 @@ const nodes = [
     state: '沈点未討伐',
     depth: '深度3 / 階層0',
     echo: '+0',
-    position: [0.5, -0.75, -0.8],
+    position: [2.2, 0.28, 2.0],
     color: 0xc45d7a,
-    scale: 1.22
+    scale: 1.2
+  },
+  {
+    id: 'red-lattice',
+    title: '赤い格子庭',
+    desc: '格子状に残響が閉じ込められている。分岐先を見失いやすい。',
+    state: '未攻略',
+    depth: '深度3 / 階層12',
+    echo: '+0',
+    position: [3.55, 0.18, .8],
+    color: 0xd8748e,
+    scale: .88
+  },
+  {
+    id: 'silent-coast',
+    title: '沈黙の岸',
+    desc: '音が水面に吸われる沿岸部。未踏域の入口。',
+    state: '未解放',
+    depth: '深度4 / 階層0',
+    echo: '+0',
+    position: [3.75, 0.12, -1.3],
+    color: 0x58627f,
+    scale: .84
   },
   {
     id: 'silent-sea',
@@ -54,9 +128,31 @@ const nodes = [
     state: '未解放',
     depth: '深度4 / 階層0',
     echo: '+0',
-    position: [3.4, -1.15, -2.1],
+    position: [5.65, 0.14, -2.75],
     color: 0x48516f,
-    scale: .95
+    scale: 1.0
+  },
+  {
+    id: 'echo-reef',
+    title: '残響礁',
+    desc: '沈黙海に浮かぶ小さな礁。薄い声だけが周囲を巡っている。',
+    state: '未解放',
+    depth: '深度4 / 階層18',
+    echo: '+0',
+    position: [3.65, 0.12, -3.65],
+    color: 0x596b8f,
+    scale: .78
+  },
+  {
+    id: 'core-rim',
+    title: '核縁部',
+    desc: '無響核へ続く境界。周囲の音が低く沈んでいる。',
+    state: '未解放',
+    depth: '深度5 / 階層0',
+    echo: '+0',
+    position: [-.15, 0.12, -2.45],
+    color: 0x626986,
+    scale: .86
   },
   {
     id: 'core',
@@ -65,27 +161,42 @@ const nodes = [
     state: '未解放',
     depth: '深度5 / 階層0',
     echo: '+0',
-    position: [6.1, -1.7, -3.2],
+    position: [-2.0, 0.2, -4.2],
     color: 0x34384c,
-    scale: .9
+    scale: 1.12
   }
 ];
 
-let selected = nodes[0];
+const links = [
+  ['forest-gate', 'forest-core'],
+  ['forest-core', 'moss-choir'],
+  ['forest-core', 'stone-throat'],
+  ['stone-throat', 'cave'],
+  ['cave', 'broken-bridge'],
+  ['broken-bridge', 'hollow'],
+  ['hollow', 'red-lattice'],
+  ['red-lattice', 'silent-coast'],
+  ['silent-coast', 'silent-sea'],
+  ['silent-sea', 'echo-reef'],
+  ['broken-bridge', 'core-rim'],
+  ['core-rim', 'core']
+];
+
+let selected = stages[1];
 const pickables = [];
-const nodeMeshes = new Map();
+const stageMeshes = new Map();
 const clock = new THREE.Clock();
 const pointer = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
-const target = new THREE.Vector3(0, -0.35, -0.5);
+const target = new THREE.Vector3(0, 0, 0);
 const drag = {
   active: false,
   moved: false,
   x: 0,
   y: 0,
   yaw: 0,
-  pitch: 0.72,
-  radius: 11
+  pitch: 1.16,
+  radius: 12.5
 };
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
@@ -94,90 +205,141 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x05050a, 1);
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x05050a, 0.058);
+scene.fog = new THREE.FogExp2(0x05050a, 0.052);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 120);
 
-scene.add(new THREE.AmbientLight(0x8890aa, 1.4));
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+scene.add(new THREE.AmbientLight(0x8890aa, 1.5));
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.9);
 keyLight.position.set(-3, 8, 5);
 scene.add(keyLight);
 
-const grid = new THREE.GridHelper(18, 32, 0x2d2b43, 0x171723);
-grid.position.y = -2.05;
+const grid = new THREE.GridHelper(18, 36, 0x2d2b43, 0x151521);
+grid.position.y = -0.18;
 scene.add(grid);
 
-const routePoints = nodes.map((node) => new THREE.Vector3(...node.position));
-const routeCurve = new THREE.CatmullRomCurve3(routePoints);
-const routeGeometry = new THREE.TubeGeometry(routeCurve, 160, 0.035, 10, false);
-const routeMaterial = new THREE.MeshBasicMaterial({ color: 0x6e668f, transparent: true, opacity: 0.72 });
-scene.add(new THREE.Mesh(routeGeometry, routeMaterial));
+for (const region of regions) {
+  const disc = new THREE.Mesh(
+    new THREE.CircleGeometry(region.radius, 72),
+    new THREE.MeshBasicMaterial({ color: region.color, transparent: true, opacity: 0.18, depthWrite: false })
+  );
+  disc.rotation.x = -Math.PI * 0.5;
+  disc.position.set(...region.position);
+  scene.add(disc);
 
-const glowRouteGeometry = new THREE.TubeGeometry(routeCurve, 160, 0.12, 12, false);
-const glowRouteMaterial = new THREE.MeshBasicMaterial({ color: 0x69d7bd, transparent: true, opacity: 0.08 });
-scene.add(new THREE.Mesh(glowRouteGeometry, glowRouteMaterial));
+  const rim = new THREE.Mesh(
+    new THREE.RingGeometry(region.radius * .98, region.radius, 96),
+    new THREE.MeshBasicMaterial({ color: region.color, transparent: true, opacity: 0.42, depthWrite: false })
+  );
+  rim.rotation.x = -Math.PI * 0.5;
+  rim.position.set(region.position[0], region.position[1] + .012, region.position[2]);
+  scene.add(rim);
 
-for (const node of nodes) {
+  const label = makeLabel(region.title, region.color, .78);
+  label.position.set(region.position[0], .35, region.position[2] - region.radius * .78);
+  scene.add(label);
+}
+
+const stageById = new Map(stages.map((stage) => [stage.id, stage]));
+for (const [fromId, toId] of links) {
+  const from = new THREE.Vector3(...stageById.get(fromId).position);
+  const to = new THREE.Vector3(...stageById.get(toId).position);
+  const mid = from.clone().lerp(to, 0.5);
+  mid.y += 0.12;
+  const curve = new THREE.CatmullRomCurve3([from, mid, to]);
+  const geometry = new THREE.TubeGeometry(curve, 32, 0.018, 8, false);
+  const material = new THREE.MeshBasicMaterial({ color: 0x70678e, transparent: true, opacity: 0.62 });
+  scene.add(new THREE.Mesh(geometry, material));
+}
+
+for (const stage of stages) {
   const group = new THREE.Group();
-  group.position.set(...node.position);
+  group.position.set(...stage.position);
 
   const core = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(0.38 * node.scale, 1),
+    new THREE.SphereGeometry(0.17 * stage.scale, 24, 16),
     new THREE.MeshStandardMaterial({
-      color: node.color,
-      emissive: node.color,
-      emissiveIntensity: node.id === 'forest' ? 0.75 : 0.35,
-      roughness: 0.35,
-      metalness: 0.08
+      color: stage.color,
+      emissive: stage.color,
+      emissiveIntensity: stage.state === '未解放' ? 0.18 : 0.58,
+      roughness: 0.28,
+      metalness: 0.05
     })
   );
-  core.userData.node = node;
+  core.userData.stage = stage;
   group.add(core);
   pickables.push(core);
 
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(0.72 * node.scale, 0.012, 8, 80),
-    new THREE.MeshBasicMaterial({ color: node.color, transparent: true, opacity: 0.55 })
+  const halo = new THREE.Mesh(
+    new THREE.RingGeometry(0.28 * stage.scale, 0.34 * stage.scale, 40),
+    new THREE.MeshBasicMaterial({ color: stage.color, transparent: true, opacity: stage.state === '未解放' ? 0.24 : 0.52, depthWrite: false })
   );
-  ring.rotation.x = Math.PI * 0.5;
-  group.add(ring);
+  halo.rotation.x = -Math.PI * 0.5;
+  group.add(halo);
 
-  const vertical = new THREE.Mesh(
-    new THREE.TorusGeometry(0.55 * node.scale, 0.01, 8, 80),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.14 })
+  const pillar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.01, 0.01, 0.42, 8),
+    new THREE.MeshBasicMaterial({ color: stage.color, transparent: true, opacity: 0.25 })
   );
-  vertical.rotation.y = Math.PI * 0.5;
-  group.add(vertical);
+  pillar.position.y = -0.18;
+  group.add(pillar);
 
-  const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.015, 0.015, 2.2, 8),
-    new THREE.MeshBasicMaterial({ color: node.color, transparent: true, opacity: 0.18 })
-  );
-  stem.position.y = -1.05;
-  group.add(stem);
+  if (stage.state === '沈点未討伐') {
+    const bossRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.46 * stage.scale, 0.018, 8, 64),
+      new THREE.MeshBasicMaterial({ color: 0xc45d7a, transparent: true, opacity: .72 })
+    );
+    bossRing.rotation.x = Math.PI * 0.5;
+    group.add(bossRing);
+  }
+
+  const label = makeLabel(stage.title, stage.color, .62);
+  label.position.set(0, .46, 0);
+  group.add(label);
 
   scene.add(group);
-  nodeMeshes.set(node.id, { group, core, ring, vertical });
+  stageMeshes.set(stage.id, { group, core, halo });
 }
 
-const particleCount = 420;
+const particleCount = 520;
 const particlePositions = new Float32Array(particleCount * 3);
 for (let i = 0; i < particleCount; i++) {
-  particlePositions[i * 3] = (Math.random() - 0.5) * 19;
-  particlePositions[i * 3 + 1] = (Math.random() - 0.35) * 5;
-  particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 13;
+  particlePositions[i * 3] = (Math.random() - 0.5) * 18;
+  particlePositions[i * 3 + 1] = Math.random() * 2.8 + 0.2;
+  particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 12;
 }
 const particleGeometry = new THREE.BufferGeometry();
 particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
 const particleMaterial = new THREE.PointsMaterial({
   color: 0x9a90c8,
-  size: 0.025,
+  size: 0.026,
   transparent: true,
-  opacity: 0.5,
+  opacity: 0.42,
   depthWrite: false
 });
 const particles = new THREE.Points(particleGeometry, particleMaterial);
 scene.add(particles);
+
+function makeLabel(text, color, scale) {
+  const canvas2d = document.createElement('canvas');
+  const context = canvas2d.getContext('2d');
+  canvas2d.width = 512;
+  canvas2d.height = 128;
+  context.clearRect(0, 0, canvas2d.width, canvas2d.height);
+  context.font = '600 34px sans-serif';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.shadowColor = '#05050a';
+  context.shadowBlur = 12;
+  context.fillStyle = '#d6d3e8';
+  context.fillText(text, 256, 64);
+  const texture = new THREE.CanvasTexture(canvas2d);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const material = new THREE.SpriteMaterial({ map: texture, color, transparent: true, opacity: .86, depthWrite: false });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(2.4 * scale, .6 * scale, 1);
+  return sprite;
+}
 
 function updateCamera() {
   const x = target.x + Math.sin(drag.yaw) * Math.cos(drag.pitch) * drag.radius;
@@ -192,34 +354,34 @@ function setSheetExpanded(expanded) {
   hudEl.setAttribute('aria-expanded', String(expanded));
 }
 
-function selectNode(node) {
-  selected = node;
-  sheetTitleEl.textContent = node.title;
-  sheetStateEl.textContent = node.state;
-  titleEl.textContent = node.title;
-  descEl.textContent = node.desc;
-  stateEl.textContent = node.state;
-  depthEl.textContent = node.depth;
-  echoEl.textContent = node.echo;
-  deployBtn.disabled = node.state === '未解放';
-  deployBtn.textContent = node.state === '未解放' ? '未解放' : 'この還響域へ出撃';
+function selectStage(stage) {
+  selected = stage;
+  sheetTitleEl.textContent = stage.title;
+  sheetStateEl.textContent = stage.state;
+  titleEl.textContent = stage.title;
+  descEl.textContent = stage.desc;
+  stateEl.textContent = stage.state;
+  depthEl.textContent = stage.depth;
+  echoEl.textContent = stage.echo;
+  deployBtn.disabled = stage.state === '未解放';
+  deployBtn.textContent = stage.state === '未解放' ? '未解放' : 'このステージへ出撃';
 
-  target.lerp(new THREE.Vector3(...node.position), 0.35);
+  target.lerp(new THREE.Vector3(stage.position[0], 0, stage.position[2]), 0.45);
 }
 
-function pickNode(event) {
+function pickStage(event) {
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
   const hits = raycaster.intersectObjects(pickables, false);
-  if (hits.length > 0) selectNode(hits[0].object.userData.node);
+  if (hits.length > 0) selectStage(hits[0].object.userData.stage);
 }
 
 function resetView() {
   drag.yaw = 0;
-  drag.pitch = 0.72;
-  drag.radius = 11;
-  target.set(0, -0.35, -0.5);
+  drag.pitch = 1.16;
+  drag.radius = 12.5;
+  target.set(0, 0, 0);
   updateCamera();
 }
 
@@ -239,20 +401,20 @@ function onPointerMove(event) {
   if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true;
   drag.x = event.clientX;
   drag.y = event.clientY;
-  drag.yaw -= dx * 0.006;
-  drag.pitch = Math.max(0.2, Math.min(1.15, drag.pitch + dy * 0.004));
+  drag.yaw -= dx * 0.0048;
+  drag.pitch = Math.max(0.62, Math.min(1.36, drag.pitch + dy * 0.0032));
 }
 
 function onPointerUp(event) {
   if (!drag.active) return;
   drag.active = false;
-  if (!drag.moved) pickNode(event);
+  if (!drag.moved) pickStage(event);
   canvas.releasePointerCapture(event.pointerId);
 }
 
 function onWheel(event) {
   event.preventDefault();
-  drag.radius = Math.max(5, Math.min(18, drag.radius + event.deltaY * 0.008));
+  drag.radius = Math.max(7.5, Math.min(20, drag.radius + event.deltaY * 0.008));
 }
 
 function onResize() {
@@ -266,16 +428,15 @@ function animate() {
   requestAnimationFrame(animate);
 
   const elapsed = clock.getElapsedTime();
-  particles.rotation.y = elapsed * 0.018;
+  particles.rotation.y = elapsed * 0.01;
 
-  for (const node of nodes) {
-    const parts = nodeMeshes.get(node.id);
-    const active = selected.id === node.id;
-    const pulse = 1 + Math.sin(elapsed * 2.2 + node.position[0]) * 0.04;
-    parts.group.scale.setScalar(active ? 1.18 * pulse : 1 * pulse);
-    parts.ring.rotation.z = elapsed * (active ? 0.45 : 0.18);
-    parts.vertical.rotation.x = elapsed * 0.22;
-    parts.core.material.emissiveIntensity = active ? 1.05 : 0.32;
+  for (const stage of stages) {
+    const parts = stageMeshes.get(stage.id);
+    const active = selected.id === stage.id;
+    const pulse = 1 + Math.sin(elapsed * 2.4 + stage.position[0]) * 0.045;
+    parts.group.scale.setScalar(active ? 1.38 * pulse : 1 * pulse);
+    parts.halo.rotation.z = elapsed * (active ? 0.72 : 0.28);
+    parts.core.material.emissiveIntensity = active ? 1.05 : (stage.state === '未解放' ? 0.16 : 0.48);
   }
 
   updateCamera();
@@ -297,7 +458,7 @@ deployBtn.addEventListener('click', () => {
   setSheetExpanded(true);
 });
 
-selectNode(selected);
+selectStage(selected);
 setSheetExpanded(false);
 resetView();
 animate();

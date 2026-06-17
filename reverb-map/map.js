@@ -2,6 +2,10 @@ import * as THREE from 'https://unpkg.com/three@0.165.0/build/three.module.js';
 import { OrbitControls } from 'https://unpkg.com/three@0.165.0/examples/jsm/controls/OrbitControls.js';
 
 const canvas = document.getElementById('map-canvas');
+const hudEl = document.getElementById('hud');
+const sheetToggle = document.getElementById('sheet-toggle');
+const sheetTitleEl = document.getElementById('sheet-title');
+const sheetStateEl = document.getElementById('sheet-state');
 const titleEl = document.getElementById('node-title');
 const descEl = document.getElementById('node-desc');
 const stateEl = document.getElementById('node-state');
@@ -174,8 +178,15 @@ const particleMaterial = new THREE.PointsMaterial({
 const particles = new THREE.Points(particleGeometry, particleMaterial);
 scene.add(particles);
 
+function setSheetExpanded(expanded) {
+  hudEl.classList.toggle('is-expanded', expanded);
+  hudEl.setAttribute('aria-expanded', String(expanded));
+}
+
 function selectNode(node) {
   selected = node;
+  sheetTitleEl.textContent = node.title;
+  sheetStateEl.textContent = node.state;
   titleEl.textContent = node.title;
   descEl.textContent = node.desc;
   stateEl.textContent = node.state;
@@ -189,6 +200,8 @@ function selectNode(node) {
 }
 
 function onPointerDown(event) {
+  if (event.target.closest('#hud')) return;
+
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
@@ -230,10 +243,15 @@ function animate() {
 
 window.addEventListener('pointerdown', onPointerDown);
 window.addEventListener('resize', onResize);
+sheetToggle.addEventListener('click', () => {
+  setSheetExpanded(!hudEl.classList.contains('is-expanded'));
+});
 resetBtn.addEventListener('click', resetView);
 deployBtn.addEventListener('click', () => {
   descEl.textContent = `${selected.title}を選択しました。ここに既存の出撃処理を接続できます。`;
+  setSheetExpanded(true);
 });
 
 selectNode(selected);
+setSheetExpanded(false);
 animate();

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>残響録 Three.js 地図サンプル</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app">
+    <canvas id="map-canvas" aria-label="還響域マップ"></canvas>
+
+    <section id="hud" aria-label="選択中の還響域情報">
+      <div class="hud-kicker">還響域</div>
+      <h1 id="node-title">森の共鳴</h1>
+      <p id="node-desc">深度1の終端。微かな残響がまだ地表に残っている。</p>
+
+      <dl class="stats">
+        <div>
+          <dt>状態</dt>
+          <dd id="node-state">攻略済み</dd>
+        </div>
+        <div>
+          <dt>到達</dt>
+          <dd id="node-depth">深度1 / 階層30</dd>
+        </div>
+        <div>
+          <dt>余響</dt>
+          <dd id="node-echo">+12</dd>
+        </div>
+      </dl>
+
+      <div class="actions">
+        <button id="deploy-btn" type="button">この還響域へ出撃</button>
+        <button id="reset-btn" type="button">視点を戻す</button>
+      </div>
+    </section>
+
+    <section id="hint" aria-label="操作説明">
+      ドラッグ: 視点移動 / ホイール: 拡大縮小 / ノードクリック: 選択
+    </section>
+  </main>
+
+  <script type="module" src="map.js"></script>
+</body>
+</html>

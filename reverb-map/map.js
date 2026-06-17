@@ -1,5 +1,4 @@
-import * as THREE from 'https://unpkg.com/three@0.165.0/build/three.module.js';
-import { OrbitControls } from 'https://unpkg.com/three@0.165.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js';
 
 const canvas = document.getElementById('map-canvas');
 const hudEl = document.getElementById('hud');
@@ -78,24 +77,26 @@ const nodeMeshes = new Map();
 const clock = new THREE.Clock();
 const pointer = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
+const target = new THREE.Vector3(0, -0.35, -0.5);
+const drag = {
+  active: false,
+  moved: false,
+  x: 0,
+  y: 0,
+  yaw: 0,
+  pitch: 0.72,
+  radius: 11
+};
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x05050a, 1);
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x05050a, 0.058);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 120);
-camera.position.set(0, 7, 10);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.06;
-controls.minDistance = 5;
-controls.maxDistance = 18;
-controls.maxPolarAngle = Math.PI * 0.48;
-controls.target.set(0, -0.35, -0.5);
 
 scene.add(new THREE.AmbientLight(0x8890aa, 1.4));
 const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
@@ -178,6 +179,14 @@ const particleMaterial = new THREE.PointsMaterial({
 const particles = new THREE.Points(particleGeometry, particleMaterial);
 scene.add(particles);
 
+function updateCamera() {
+  const x = target.x + Math.sin(drag.yaw) * Math.cos(drag.pitch) * drag.radius;
+  const y = target.y + Math.sin(drag.pitch) * drag.radius;
+  const z = target.z + Math.cos(drag.yaw) * Math.cos(drag.pitch) * drag.radius;
+  camera.position.set(x, y, z);
+  camera.lookAt(target);
+}
+
 function setSheetExpanded(expanded) {
   hudEl.classList.toggle('is-expanded', expanded);
   hudEl.setAttribute('aria-expanded', String(expanded));
@@ -195,13 +204,10 @@ function selectNode(node) {
   deployBtn.disabled = node.state === '未解放';
   deployBtn.textContent = node.state === '未解放' ? '未解放' : 'この還響域へ出撃';
 
-  const target = new THREE.Vector3(...node.position);
-  controls.target.lerp(target, 0.35);
+  target.lerp(new THREE.Vector3(...node.position), 0.35);
 }
 
-function onPointerDown(event) {
-  if (event.target.closest('#hud')) return;
-
+function pickNode(event) {
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
@@ -210,15 +216,50 @@ function onPointerDown(event) {
 }
 
 function resetView() {
-  camera.position.set(0, 7, 10);
-  controls.target.set(0, -0.35, -0.5);
-  controls.update();
+  drag.yaw = 0;
+  drag.pitch = 0.72;
+  drag.radius = 11;
+  target.set(0, -0.35, -0.5);
+  updateCamera();
+}
+
+function onPointerDown(event) {
+  if (event.target.closest('#hud')) return;
+  drag.active = true;
+  drag.moved = false;
+  drag.x = event.clientX;
+  drag.y = event.clientY;
+  canvas.setPointerCapture(event.pointerId);
+}
+
+function onPointerMove(event) {
+  if (!drag.active) return;
+  const dx = event.clientX - drag.x;
+  const dy = event.clientY - drag.y;
+  if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true;
+  drag.x = event.clientX;
+  drag.y = event.clientY;
+  drag.yaw -= dx * 0.006;
+  drag.pitch = Math.max(0.2, Math.min(1.15, drag.pitch + dy * 0.004));
+}
+
+function onPointerUp(event) {
+  if (!drag.active) return;
+  drag.active = false;
+  if (!drag.moved) pickNode(event);
+  canvas.releasePointerCapture(event.pointerId);
+}
+
+function onWheel(event) {
+  event.preventDefault();
+  drag.radius = Math.max(5, Math.min(18, drag.radius + event.deltaY * 0.008));
 }
 
 function onResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  updateCamera();
 }
 
 function animate() {
@@ -237,11 +278,15 @@ function animate() {
     parts.core.material.emissiveIntensity = active ? 1.05 : 0.32;
   }
 
-  controls.update();
+  updateCamera();
   renderer.render(scene, camera);
 }
 
-window.addEventListener('pointerdown', onPointerDown);
+canvas.addEventListener('pointerdown', onPointerDown);
+canvas.addEventListener('pointermove', onPointerMove);
+canvas.addEventListener('pointerup', onPointerUp);
+canvas.addEventListener('pointercancel', () => { drag.active = false; });
+canvas.addEventListener('wheel', onWheel, { passive: false });
 window.addEventListener('resize', onResize);
 sheetToggle.addEventListener('click', () => {
   setSheetExpanded(!hudEl.classList.contains('is-expanded'));
@@ -254,4 +299,5 @@ deployBtn.addEventListener('click', () => {
 
 selectNode(selected);
 setSheetExpanded(false);
+resetView();
 animate();

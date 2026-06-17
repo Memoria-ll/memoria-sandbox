@@ -53,13 +53,53 @@ body,
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.95'/%3E%3C/svg%3E");
 }
 
-#map-canvas {
+#map-canvas,
+#atlas-canvas {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
   display: block;
   z-index: 0;
+}
+
+.map-tabs {
+  position: fixed;
+  top: 1.4rem;
+  left: 1.4rem;
+  z-index: 5;
+  display: flex;
+  gap: .4rem;
+  padding: .32rem;
+  background: rgba(5, 5, 10, .62);
+  border: 1px solid rgba(214, 184, 107, .22);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, .38);
+}
+
+.map-tab {
+  min-width: 5.5rem;
+  padding: .55rem .9rem;
+  color: rgba(238, 228, 199, .62);
+  text-decoration: none;
+  text-align: center;
+  border: 1px solid transparent;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  font-size: .72rem;
+  letter-spacing: .18em;
+}
+
+.map-tab:hover,
+.map-tab:focus-visible {
+  color: var(--text);
+  border-color: rgba(214, 184, 107, .34);
+  outline: none;
+}
+
+.map-tab.is-active {
+  color: #06110d;
+  background: linear-gradient(100deg, #69d7bd, #d6b86b);
+  border-color: transparent;
 }
 
 #hud {
@@ -211,6 +251,20 @@ button:focus {
 }
 
 @media (max-width: 720px) {
+  .map-tabs {
+    left: .8rem;
+    top: calc(.8rem + env(safe-area-inset-top));
+    gap: .25rem;
+    padding: .24rem;
+  }
+
+  .map-tab {
+    min-width: auto;
+    padding: .42rem .58rem;
+    font-size: .62rem;
+    letter-spacing: .12em;
+  }
+
   #hud {
     left: .8rem;
     right: .8rem;
@@ -223,9 +277,7 @@ button:focus {
   }
 
   #hud::before,
-  #hud::after {
-    display: none;
-  }
+  #hud::after { display: none; }
 
   #sheet-toggle {
     display: block;
@@ -275,9 +327,7 @@ button:focus {
     padding: 0 .9rem .9rem;
   }
 
-  #hud.is-expanded #sheet-detail {
-    display: block;
-  }
+  #hud.is-expanded #sheet-detail { display: block; }
 
   #hud.is-expanded {
     max-height: min(64svh, 430px);
@@ -333,7 +383,7 @@ button:focus {
   #hint {
     left: .8rem;
     right: auto;
-    top: calc(.8rem + env(safe-area-inset-top));
+    top: calc(3.7rem + env(safe-area-inset-top));
     bottom: auto;
     max-width: calc(100vw - 1.6rem);
     padding: .45rem .62rem;

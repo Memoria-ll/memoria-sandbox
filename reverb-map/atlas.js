@@ -13,71 +13,94 @@ const resetBtn = document.getElementById('reset-btn');
 const deployBtn = document.getElementById('deploy-btn');
 
 const map = {
-  width: 1600,
-  height: 1050,
+  width: 1700,
+  height: 1120,
   cameraX: 0,
   cameraY: 0,
-  zoom: 0.82,
+  zoom: 0.78,
   targetX: 0,
   targetY: 0,
-  targetZoom: 0.82,
+  targetZoom: 0.78,
 };
 
-const center = { x: 800, y: 525 };
+const base = {
+  id: 'base',
+  title: '観測拠点',
+  state: '拠点',
+  depth: '帰還地点',
+  echo: '—',
+  desc: '各バイオームへの出撃と帰還を行う拠点。還響域の外縁に置かれた、かろうじて音が安定する場所。',
+  x: 545,
+  y: 555,
+  color: '#eee4c7',
+  base: true,
+};
 
 const biomes = [
   {
-    id: 'weeping-forest',
-    title: '啜り泣く樹海',
+    id: 'anechoic-hall',
+    title: '無響の広間',
     state: '到達可能',
-    depth: '北西域 / 深度1',
-    echo: '+12',
-    desc: '葉擦れの奥で誰かの泣き声に似た残響が続く樹海。浅層の探索と余響回収の起点になる。',
-    x: 420,
-    y: 270,
-    color: '#7ee0ad',
-    fill: '#213b31',
-    points: [[300,210],[404,142],[552,190],[608,324],[520,440],[366,424],[262,318]],
-  },
-  {
-    id: 'pipe-city',
-    title: '軋む配管都市',
-    state: '攻略中',
-    depth: '北東域 / 深度2',
-    echo: '+0',
-    desc: '無数の管が建物のように絡み、圧力と金属音が街路を満たす都市遺構。',
-    x: 1110,
-    y: 275,
-    color: '#b6a2ff',
-    fill: '#342f4e',
-    points: [[980,180],[1124,118],[1276,210],[1324,354],[1190,452],[1018,396],[940,286]],
+    depth: '近接域 / 深度1',
+    echo: '+3',
+    desc: '拠点から最も近い最初のバイオーム。広すぎる室内のような空間で、足音だけが吸われて戻らない。',
+    x: 720,
+    y: 520,
+    color: '#eee4c7',
+    fill: '#3b3326',
+    points: [[625,430],[742,382],[850,452],[872,570],[790,660],[658,632],[594,540]],
   },
   {
     id: 'glass-hollow',
     title: '硝子の空洞',
     state: '未攻略',
-    depth: '東域 / 深度3',
+    depth: '広間奥 / 深度2',
     echo: '+0',
-    desc: '透明な壁面が音を何度も折り返す巨大空洞。目に見える距離と響く距離が一致しない。',
-    x: 1300,
-    y: 548,
+    desc: '無響の広間の少し先で開く透明な空洞。見える距離と響く距離が一致せず、探索者の距離感を狂わせる。',
+    x: 950,
+    y: 430,
     color: '#9fe7ff',
-    fill: '#24435a',
-    points: [[1168,466],[1308,402],[1450,486],[1480,626],[1360,728],[1202,666]],
+    fill: '#25475d',
+    points: [[862,352],[982,306],[1098,380],[1120,500],[1014,592],[888,540]],
   },
   {
-    id: 'silent-center',
-    title: '沈黙の中心',
-    state: '未解放',
-    depth: '南東域 / 深度5',
+    id: 'pipe-city',
+    title: '軋む配管都市',
+    state: '未攻略',
+    depth: '遠隔北東域 / 深度3',
     echo: '+0',
-    desc: '地図上では周辺域として記録されるが、実際には音の流れそのものが沈み込む危険域。',
-    x: 1105,
-    y: 790,
-    color: '#8790ad',
-    fill: '#292e43',
-    points: [[966,700],[1118,640],[1284,730],[1260,900],[1088,980],[946,864]],
-    locked: true,
+    desc: '拠点からかなり離れた廃都市。建物のように絡む配管が、風もないのに軋み続けている。',
+    x: 1260,
+    y: 260,
+    color: '#b6a2ff',
+    fill: '#342f4e',
+    points: [[1096,178],[1268,112],[1430,210],[1474,366],[1340,480],[1148,424],[1054,292]],
+  },
+  {
+    id: 'weeping-forest',
+    title: '啜り泣く樹海',
+    state: '到達可能',
+    depth: '西域 / 深度2',
+    echo: '+8',
+    desc: '拠点とは別方向に広がる樹海。葉擦れの奥で、泣き声に似た残響が途切れず続く。',
+    x: 300,
+    y: 310,
+    color: '#7ee0ad',
+    fill: '#213b31',
+    points: [[160,250],[292,152],[446,204],[510,352],[404,484],[220,456],[114,334]],
+  },
+  {
+    id: 'bell-valley',
+    title: '鳴鐘の谷',
+    state: '地域接続',
+    depth: '樹海外縁 / 深度2',
+    echo: '+5',
+    desc: '樹海と砂海の間に刻まれた谷。遠くの衝撃が遅れて鐘のように鳴り、進路の目印になる。',
+    x: 350,
+    y: 595,
+    color: '#d8c176',
+    fill: '#3f3824',
+    points: [[224,500],[370,454],[502,568],[454,718],[282,744],[172,638]],
   },
   {
     id: 'humming-sand',
@@ -85,52 +108,41 @@ const biomes = [
     state: '未攻略',
     depth: '南西域 / 深度3',
     echo: '+0',
-    desc: '砂丘の下で低い唸りが続く乾いた海。風ではなく地中の残響が砂紋を動かしている。',
-    x: 500,
-    y: 810,
+    desc: '樹海の先、谷を越えたところに広がる砂の海。風ではなく地中の残響が砂丘を震わせている。',
+    x: 545,
+    y: 875,
     color: '#e1bd73',
     fill: '#5a4324',
-    points: [[326,720],[498,652],[654,710],[710,854],[592,966],[398,940],[284,830]],
+    points: [[326,790],[530,688],[736,774],[774,948],[604,1040],[388,1012],[270,900]],
   },
   {
-    id: 'bell-valley',
-    title: '鳴鐘の谷',
-    state: '到達可能',
-    depth: '西域 / 深度2',
-    echo: '+5',
-    desc: '谷壁に吊られた見えない鐘が、遠い衝撃に遅れて鳴る。分岐と帰還の要所。',
-    x: 255,
-    y: 550,
-    color: '#d8c176',
-    fill: '#3f3824',
-    points: [[160,428],[286,394],[404,496],[374,650],[238,724],[118,618]],
+    id: 'silent-sea',
+    title: '沈黙海',
+    state: '未解放',
+    depth: '外縁域 / 深度5',
+    echo: '+0',
+    desc: '砂海のさらに外側に広がる静かな海域。音の欠落が潮のように満ち、地図上の境界を曖昧にする。',
+    x: 960,
+    y: 900,
+    color: '#8790ad',
+    fill: '#292e43',
+    points: [[810,790],[998,710],[1218,824],[1170,1046],[940,1092],[764,984]],
+    locked: true,
   },
 ];
 
-const hub = {
-  id: 'anechoic-hall',
-  title: '無響の広間',
-  state: '拠点',
-  depth: '中央拠点',
-  echo: '—',
-  desc: '還響域へ向かうための中央拠点。外縁のバイオームで得た余響と記録がここへ戻ってくる。',
-  x: center.x,
-  y: center.y,
-  color: '#eee4c7',
-  hub: true,
-};
-
 const lorePoints = [
-  { id:'lore-forest', title:'響森圏', parent:'啜り泣く樹海', x:470, y:385, color:'#7ee0ad', desc:'かつて森の共鳴域として記録されていた浅層一帯。現在は啜り泣く樹海の外縁名として残っている。' },
-  { id:'lore-cave', title:'石窟帯', parent:'軋む配管都市', x:995, y:395, color:'#b6a2ff', desc:'配管都市の地下側に広がる旧石窟名。硬質な反響が装備素材の選別に使われる。' },
-  { id:'lore-hollow', title:'空洞律域', parent:'硝子の空洞', x:1190, y:605, color:'#9fe7ff', desc:'硝子の空洞の深部にある律動域。空間そのものが一定周期で鳴り、通路の距離感を狂わせる。' },
-  { id:'lore-sea', title:'沈黙海', parent:'沈黙の中心', x:1225, y:870, color:'#8790ad', desc:'沈黙の中心へ流れ込む静かな海域。音の欠落が潮のように満ち引きする。' },
-  { id:'lore-core', title:'無響核周辺', parent:'沈黙の中心', x:1010, y:725, color:'#9ca2c2', desc:'中心部へ近づくほど残響の反射が消える外周帯。現在は未解放域として封鎖されている。' },
-  { id:'lore-reef', title:'残響礁', parent:'沈黙海', x:1335, y:800, color:'#8fa5d6', desc:'沈黙海に点在する薄い残響の溜まり場。攻略地点ではなく、未踏域の手掛かりとして扱われる。' },
-  { id:'lore-bridge', title:'断響橋', parent:'鳴鐘の谷', x:390, y:600, color:'#d8c176', desc:'鳴鐘の谷から中央へ戻る古い響道。途中で音が途切れるため、帰還経路としては不安定。' },
+  { id:'lore-forest', title:'響森圏', parent:'啜り泣く樹海', x:372, y:420, color:'#7ee0ad', desc:'かつて森の共鳴域として記録されていた浅層一帯。現在は啜り泣く樹海の外縁名として残っている。' },
+  { id:'lore-cave', title:'石窟帯', parent:'軋む配管都市', x:1128, y:394, color:'#b6a2ff', desc:'配管都市の地下側に広がる旧石窟名。硬質な反響が装備素材の選別に使われる。' },
+  { id:'lore-hollow', title:'空洞律域', parent:'硝子の空洞', x:1032, y:555, color:'#9fe7ff', desc:'硝子の空洞の深部にある律動域。空間そのものが一定周期で鳴り、通路の距離感を狂わせる。' },
+  { id:'lore-sea', title:'沈黙海旧記録', parent:'沈黙海', x:1110, y:978, color:'#8790ad', desc:'沈黙海の古い観測名。現在は外縁域全体の呼称として統合されている。' },
+  { id:'lore-core', title:'無響核周辺', parent:'沈黙海', x:865, y:1020, color:'#9ca2c2', desc:'沈黙海のさらに先にあるとされる外周帯。現在の地図では輪郭だけが記録されている。' },
+  { id:'lore-reef', title:'残響礁', parent:'沈黙海', x:1030, y:790, color:'#8fa5d6', desc:'沈黙海に点在する薄い残響の溜まり場。攻略地点ではなく、未踏域の手掛かりとして扱われる。' },
+  { id:'lore-bridge', title:'断響橋', parent:'鳴鐘の谷', x:486, y:660, color:'#d8c176', desc:'鳴鐘の谷から別領域へ伸びる古い響道。途中で音が途切れるため、帰還経路としては不安定。' },
+  { id:'lore-hollow2', title:'空洞律', parent:'無響の広間', x:812, y:610, color:'#eee4c7', desc:'無響の広間で観測される局所的な法則名。広間内部の一部では、反響ではなく沈黙そのものが周期を持つ。' },
 ];
 
-const nodes = [hub, ...biomes, ...lorePoints.map(point => ({
+const nodes = [base, ...biomes, ...lorePoints.map(point => ({
   ...point,
   state: '地域情報',
   depth: point.parent,
@@ -139,21 +151,19 @@ const nodes = [hub, ...biomes, ...lorePoints.map(point => ({
 }))];
 
 const routePairs = [
-  ['anechoic-hall','weeping-forest'],
-  ['anechoic-hall','pipe-city'],
+  ['base','anechoic-hall'],
   ['anechoic-hall','glass-hollow'],
-  ['anechoic-hall','silent-center'],
-  ['anechoic-hall','humming-sand'],
+  ['glass-hollow','pipe-city'],
+  ['base','weeping-forest'],
+  ['weeping-forest','bell-valley'],
+  ['bell-valley','humming-sand'],
+  ['humming-sand','silent-sea'],
   ['anechoic-hall','bell-valley'],
-  ['bell-valley','weeping-forest'],
-  ['pipe-city','glass-hollow'],
-  ['glass-hollow','silent-center'],
-  ['silent-center','humming-sand'],
-  ['humming-sand','bell-valley'],
+  ['glass-hollow','silent-sea'],
 ];
 
 const nodeById = new Map(nodes.map(node => [node.id, node]));
-let selected = hub;
+let selected = base;
 let hovered = null;
 let dragging = false;
 let moved = false;
@@ -203,7 +213,7 @@ function draw() {
 }
 
 function drawBackdrop() {
-  const g = ctx.createRadialGradient(window.innerWidth * .52, window.innerHeight * .48, 50, window.innerWidth * .52, window.innerHeight * .48, Math.max(window.innerWidth, window.innerHeight));
+  const g = ctx.createRadialGradient(window.innerWidth * .48, window.innerHeight * .48, 50, window.innerWidth * .48, window.innerHeight * .48, Math.max(window.innerWidth, window.innerHeight));
   g.addColorStop(0, '#211912');
   g.addColorStop(.55, '#0b0b12');
   g.addColorStop(1, '#030306');
@@ -223,15 +233,16 @@ function drawBackdrop() {
 
 function drawMapLayer() {
   drawParchment();
-  drawRings();
+  drawDistanceRings();
   drawLatLines();
   biomes.forEach(drawLandmass);
+  drawFarFog();
   drawRoutes();
-  drawHubPulse();
+  drawBasePulse();
   drawBiomeLabels();
   biomes.forEach(drawBiomeNode);
   lorePoints.forEach(drawLorePoint);
-  drawHub();
+  drawBase();
   drawCompass();
 }
 
@@ -239,7 +250,7 @@ function drawParchment() {
   ctx.save();
   ctx.translate(80, 54);
   roundedPath(0, 0, map.width - 160, map.height - 108, 22);
-  const g = ctx.createRadialGradient(map.width / 2, map.height / 2, 80, map.width / 2, map.height / 2, 920);
+  const g = ctx.createRadialGradient(map.width / 2, map.height / 2, 80, map.width / 2, map.height / 2, 980);
   g.addColorStop(0, '#3a2a1a');
   g.addColorStop(.56, '#171419');
   g.addColorStop(1, '#09080b');
@@ -249,7 +260,7 @@ function drawParchment() {
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.globalAlpha = .16;
-  for (let i = 0; i < 72; i++) {
+  for (let i = 0; i < 76; i++) {
     ctx.beginPath();
     ctx.strokeStyle = i % 2 ? '#d6b86b' : '#eee4c7';
     ctx.lineWidth = .6;
@@ -261,12 +272,12 @@ function drawParchment() {
   ctx.restore();
 }
 
-function drawRings() {
+function drawDistanceRings() {
   ctx.save();
-  ctx.translate(center.x, center.y);
-  ctx.strokeStyle = 'rgba(214,184,107,.16)';
+  ctx.translate(base.x, base.y);
+  ctx.strokeStyle = 'rgba(214,184,107,.14)';
   ctx.lineWidth = 1;
-  [165, 310, 465].forEach((r, i) => {
+  [190, 420, 680].forEach((r, i) => {
     ctx.setLineDash(i === 1 ? [12, 10] : []);
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
@@ -280,16 +291,16 @@ function drawLatLines() {
   ctx.save();
   ctx.strokeStyle = 'rgba(238,228,199,.07)';
   ctx.lineWidth = 1;
-  for (let x = 160; x <= 1440; x += 160) {
+  for (let x = 160; x <= 1520; x += 160) {
     ctx.beginPath();
     ctx.moveTo(x, 100);
-    ctx.lineTo(x, 960);
+    ctx.lineTo(x, 1020);
     ctx.stroke();
   }
-  for (let y = 150; y <= 900; y += 150) {
+  for (let y = 150; y <= 1000; y += 150) {
     ctx.beginPath();
     ctx.moveTo(110, y);
-    ctx.lineTo(1490, y);
+    ctx.lineTo(1590, y);
     ctx.stroke();
   }
   ctx.restore();
@@ -321,6 +332,27 @@ function drawLandmass(land) {
   ctx.restore();
 }
 
+function drawFarFog() {
+  ctx.save();
+  const fog = ctx.createRadialGradient(960, 920, 80, 960, 920, 310);
+  fog.addColorStop(0, 'rgba(22,28,45,.1)');
+  fog.addColorStop(.58, 'rgba(14,17,31,.46)');
+  fog.addColorStop(1, 'rgba(5,5,10,.02)');
+  ctx.fillStyle = fog;
+  ctx.fillRect(720, 660, 540, 430);
+  ctx.globalAlpha = .18;
+  ctx.strokeStyle = '#9aa7c9';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 15; i++) {
+    ctx.beginPath();
+    const y = 730 + i * 24;
+    ctx.moveTo(760, y);
+    for (let x = 760; x < 1220; x += 42) ctx.lineTo(x, y + Math.sin(x * .025 + i + time) * 9);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawRoutes() {
   routePairs.forEach(([a, b], index) => {
     const from = nodeById.get(a);
@@ -333,8 +365,8 @@ function drawRoutes() {
     ctx.setLineDash(locked ? [10, 10] : []);
     ctx.beginPath();
     ctx.moveTo(from.x, from.y);
-    const cx = (from.x + to.x) / 2 + Math.sin(index * 1.7) * 28;
-    const cy = (from.y + to.y) / 2 + Math.cos(index * 1.1) * 22;
+    const cx = (from.x + to.x) / 2 + Math.sin(index * 1.7) * 30;
+    const cy = (from.y + to.y) / 2 + Math.cos(index * 1.1) * 26;
     ctx.quadraticCurveTo(cx, cy, to.x, to.y);
     ctx.stroke();
     ctx.setLineDash([]);
@@ -353,11 +385,11 @@ function drawRoutes() {
   });
 }
 
-function drawHubPulse() {
+function drawBasePulse() {
   ctx.save();
-  ctx.translate(hub.x, hub.y);
+  ctx.translate(base.x, base.y);
   for (let i = 0; i < 4; i++) {
-    const r = 56 + i * 24 + Math.sin(time * 1.6 + i) * 4;
+    const r = 48 + i * 22 + Math.sin(time * 1.6 + i) * 4;
     ctx.strokeStyle = `rgba(238,228,199,${0.2 - i * 0.035})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -421,13 +453,13 @@ function drawBiomeNode(node) {
   ctx.restore();
 }
 
-function drawHub() {
-  const active = selected.id === hub.id;
+function drawBase() {
+  const active = selected.id === base.id;
   ctx.save();
-  ctx.translate(hub.x, hub.y);
+  ctx.translate(base.x, base.y);
   ctx.fillStyle = 'rgba(0,0,0,.32)';
   ctx.beginPath();
-  ctx.ellipse(0, 34, 70, 16, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 30, 58, 14, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.shadowColor = '#eee4c7';
@@ -438,7 +470,7 @@ function drawHub() {
   ctx.beginPath();
   for (let i = 0; i < 10; i++) {
     const a = -Math.PI / 2 + i * Math.PI * 2 / 10 + time * .05;
-    const r = i % 2 ? 31 : 43;
+    const r = i % 2 ? 25 : 36;
     const x = Math.cos(a) * r;
     const y = Math.sin(a) * r;
     i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
@@ -449,14 +481,14 @@ function drawHub() {
   ctx.shadowBlur = 0;
 
   ctx.fillStyle = '#fff0be';
-  ctx.font = '600 38px serif';
+  ctx.font = '600 30px serif';
   ctx.textAlign = 'center';
   ctx.shadowColor = '#040408';
   ctx.shadowBlur = 16;
-  ctx.fillText(hub.title, 0, 76);
+  ctx.fillText(base.title, 0, 65);
   ctx.font = '13px serif';
   ctx.fillStyle = 'rgba(214,184,107,.64)';
-  ctx.fillText('BASE', 0, 104);
+  ctx.fillText('BASE', 0, 91);
   ctx.restore();
 }
 
@@ -488,7 +520,7 @@ function drawLorePoint(point) {
 
 function drawCompass() {
   ctx.save();
-  ctx.translate(1410, 160);
+  ctx.translate(1510, 160);
   ctx.strokeStyle = 'rgba(214,184,107,.55)';
   ctx.fillStyle = 'rgba(214,184,107,.35)';
   ctx.lineWidth = 2;
@@ -549,8 +581,8 @@ function selectNode(node, focus = true) {
   stateEl.textContent = node.state;
   depthEl.textContent = node.depth;
   echoEl.textContent = node.echo;
-  deployBtn.disabled = Boolean(node.locked || node.infoOnly || node.hub);
-  deployBtn.textContent = node.infoOnly ? '情報のみ' : node.hub ? '拠点' : node.locked ? '未解放' : 'このバイオームへ出撃';
+  deployBtn.disabled = Boolean(node.locked || node.infoOnly || node.base);
+  deployBtn.textContent = node.infoOnly ? '情報のみ' : node.base ? '拠点' : node.locked ? '未解放' : 'このバイオームへ出撃';
   if (focus) {
     map.targetX = map.width / 2 - node.x;
     map.targetY = map.height / 2 - node.y;
@@ -567,7 +599,7 @@ function hitTest(clientX, clientY) {
   const p = screenToWorld(clientX, clientY);
   for (let i = nodes.length - 1; i >= 0; i--) {
     const node = nodes[i];
-    const radius = node.infoOnly ? 28 : node.hub ? 58 : 42;
+    const radius = node.infoOnly ? 28 : node.base ? 58 : 42;
     if (Math.hypot(p.x - node.x, p.y - node.y) < radius / map.zoom) return node;
   }
   return null;
@@ -607,7 +639,7 @@ canvas.addEventListener('wheel', event => {
   event.preventDefault();
   const before = screenToWorld(event.clientX, event.clientY);
   const factor = event.deltaY > 0 ? .9 : 1.1;
-  map.targetZoom = Math.max(.48, Math.min(1.75, map.targetZoom * factor));
+  map.targetZoom = Math.max(.45, Math.min(1.75, map.targetZoom * factor));
   const after = screenToWorld(event.clientX, event.clientY);
   map.targetX += after.x - before.x;
   map.targetY += after.y - before.y;
@@ -617,7 +649,7 @@ sheetToggle.addEventListener('click', () => setSheetExpanded(!hudEl.classList.co
 resetBtn.addEventListener('click', () => {
   map.targetX = 0;
   map.targetY = 0;
-  map.targetZoom = .82;
+  map.targetZoom = .78;
 });
 deployBtn.addEventListener('click', () => {
   descEl.textContent = `${selected.title}を選択しました。ここに既存の出撃処理を接続できます。`;

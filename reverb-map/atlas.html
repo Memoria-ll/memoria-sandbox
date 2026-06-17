@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>残響録 ワールドマップ案</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app">
+    <nav class="map-tabs" aria-label="マップ表示切替">
+      <a class="map-tab" href="./">標本図</a>
+      <a class="map-tab is-active" href="./atlas.html">世界図</a>
+    </nav>
+
+    <canvas id="atlas-canvas" aria-label="還響域ワールドマップ"></canvas>
+
+    <section id="hud" aria-label="選択中のステージ情報" aria-expanded="false">
+      <button id="sheet-toggle" type="button" aria-label="ステージ情報を開閉">
+        <span class="sheet-grip" aria-hidden="true"></span>
+        <span class="sheet-summary">
+          <span id="sheet-title">森の共鳴</span>
+          <span id="sheet-state">攻略済み</span>
+        </span>
+      </button>
+
+      <div id="sheet-detail">
+        <div class="hud-kicker">世界図 / STAGE</div>
+        <h1 id="node-title">森の共鳴</h1>
+        <p id="node-desc">響森圏の中心にある安定した共鳴点。周辺の街道がここから分岐する。</p>
+
+        <dl class="stats">
+          <div>
+            <dt>状態</dt>
+            <dd id="node-state">攻略済み</dd>
+          </div>
+          <div>
+            <dt>到達</dt>
+            <dd id="node-depth">深度1 / 階層30</dd>
+          </div>
+          <div>
+            <dt>余響</dt>
+            <dd id="node-echo">+12</dd>
+          </div>
+        </dl>
+
+        <div class="actions">
+          <button id="deploy-btn" type="button">このステージへ出撃</button>
+          <button id="reset-btn" type="button">視点を戻す</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="hint" aria-label="操作説明">
+      ドラッグ: 地図移動 / ホイール・ピンチ: 拡大縮小 / ピン選択: 詳細表示
+    </section>
+  </main>
+
+  <script type="module" src="atlas.js"></script>
+</body>
+</html>
